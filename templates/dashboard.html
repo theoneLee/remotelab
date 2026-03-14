@@ -260,6 +260,18 @@
       box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
     }
 
+    .btn-secondary {
+      background: transparent;
+      border-color: var(--terminal-cyan);
+      color: var(--terminal-cyan);
+    }
+
+    .btn-secondary:hover {
+      background: var(--terminal-cyan);
+      color: var(--bg-black);
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+    }
+
     .btn-danger {
       background: transparent;
       border-color: var(--terminal-red);
@@ -740,6 +752,11 @@
       height: fit-content;
     }
 
+    .open-folder-row .btn-secondary {
+      white-space: nowrap;
+      height: fit-content;
+    }
+
     @media (max-width: 768px) {
       .open-folder-row {
         flex-direction: column;
@@ -786,6 +803,9 @@
         </div>
         <button type="button" id="open-folder-btn" class="btn btn-primary">
           ▶ Open Folder
+        </button>
+        <button type="button" id="open-chat-btn" class="btn btn-secondary">
+          💬 Chat
         </button>
       </div>
     </div>
@@ -947,6 +967,12 @@
                  onclick="event.stopPropagation();">
                 ▶ Open
               </a>
+              <a href="/chat/${encodeURIComponent(f.folder)}"
+                 class="btn btn-secondary"
+                 style="flex: 1;"
+                 onclick="event.stopPropagation();">
+                💬 Chat
+              </a>
               <button data-delete-folder="${escapeHtml(f.folder)}" class="btn btn-danger" onclick="event.stopPropagation();">
                 ✕ Delete
               </button>
@@ -974,10 +1000,15 @@
       }
 
       try {
-        const targetFolder = folders.find(f => f.folder === folder);
-        if (!targetFolder) return;
+        const res = await fetch(`/api/sessions?folder=${encodeURIComponent(folder)}`);
+        const data = await res.json();
+        const targetSessions = data.sessions || [];
+        if (!targetSessions.length) {
+          await loadFolders();
+          return;
+        }
 
-        const deletePromises = targetFolder.sessions.map(s =>
+        const deletePromises = targetSessions.map(s =>
           fetch(`/api/sessions/${s.id}`, { method: 'DELETE' })
         );
         await Promise.all(deletePromises);
@@ -1010,6 +1041,15 @@
         return;
       }
       window.location.href = '/folder/' + encodeURIComponent(folderPath);
+    });
+
+    document.getElementById('open-chat-btn').addEventListener('click', function() {
+      const folderPath = document.getElementById('folder-path').value.trim();
+      if (!folderPath) {
+        alert('Please enter a folder path');
+        return;
+      }
+      window.location.href = '/chat/' + encodeURIComponent(folderPath);
     });
 
     // Allow Enter key to open folder

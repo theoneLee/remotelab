@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=overlays-content">
+  <title>{{FOLDER_PATH_HTML}} // Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style nonce="{{NONCE}}">
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(15, 23, 42, 0.92);
+      --panel-soft: rgba(30, 41, 59, 0.72);
+      --border: rgba(148, 163, 184, 0.18);
+      --text: #e5eefc;
+      --muted: #9fb1cc;
+      --accent: #60a5fa;
+      --accent-2: #22d3ee;
+      --danger: #fb7185;
+      --shadow: 0 18px 40px rgba(2, 6, 23, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(34, 211, 238, 0.16), transparent 35%),
+        radial-gradient(circle at bottom, rgba(96, 165, 250, 0.18), transparent 35%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .app-shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 14px;
+      padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      border-radius: 18px;
+      padding: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .nav-btn,
+    .action-btn,
+    .scroll-btn,
+    .approval-btn {
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: rgba(96, 165, 250, 0.12);
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      text-decoration: none;
+      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+      padding: 10px 14px;
+    }
+
+    .nav-btn:hover,
+    .action-btn:hover,
+    .scroll-btn:hover,
+    .approval-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(96, 165, 250, 0.24);
+      border-color: rgba(96, 165, 250, 0.42);
+    }
+
+    .action-btn.primary {
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.95), rgba(34, 211, 238, 0.84));
+      color: #05111f;
+    }
+
+    .action-btn.danger {
+      background: rgba(251, 113, 133, 0.14);
+      border-color: rgba(251, 113, 133, 0.24);
+    }
+
+    .action-btn:disabled,
+    .scroll-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .topbar-main {
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .title {
+      margin: 0 0 4px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .subtitle,
+    .status-line,
+    .session-line,
+    .help-text,
+    .empty-subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .topbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toolbar-select {
+      min-width: 190px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.88);
+      color: var(--text);
+      font: inherit;
+    }
+
+    .toolbar-select:focus,
+    .composer textarea:focus {
+      outline: none;
+      border-color: rgba(96, 165, 250, 0.55);
+      box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.12);
+    }
+
+    .legacy-note {
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+
+    .legacy-note summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--accent-2);
+    }
+
+    .legacy-note code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .messages-panel {
+      border-radius: 24px;
+      overflow: hidden;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .messages-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .messages-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .message-row {
+      display: flex;
+    }
+
+    .message-row.user { justify-content: flex-end; }
+    .message-row.assistant,
+    .message-row.system { justify-content: flex-start; }
+
+    .message-bubble {
+      max-width: min(82%, 740px);
+      border-radius: 18px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+    }
+
+    .message-bubble.user {
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.95), rgba(34, 211, 238, 0.84));
+      color: #04111f;
+      border-color: rgba(125, 211, 252, 0.3);
+    }
+
+    .message-bubble.assistant {
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .message-bubble.system {
+      background: rgba(251, 191, 36, 0.12);
+      border-color: rgba(251, 191, 36, 0.25);
+    }
+
+    .message-meta {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .message-content {
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .message-bubble.pending .message-meta::after {
+      content: ' · typing';
+      color: var(--accent-2);
+    }
+
+    .empty-state {
+      margin: auto;
+      text-align: center;
+      max-width: 460px;
+      padding: 28px;
+    }
+
+    .empty-title {
+      margin: 0 0 8px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .approval-panel {
+      border-radius: 20px;
+      padding: 14px 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .approval-panel[hidden] { display: none; }
+
+    .approval-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .approval-body {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .approval-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .composer {
+      border-radius: 22px;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .composer textarea {
+      width: 100%;
+      min-height: 98px;
+      max-height: 260px;
+      resize: vertical;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.92);
+      color: var(--text);
+      padding: 14px;
+      font: inherit;
+      line-height: 1.55;
+    }
+
+    .composer-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .composer-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .scroll-btn {
+      position: fixed;
+      right: 18px;
+      bottom: calc(110px + env(safe-area-inset-bottom));
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      display: none;
+      place-items: center;
+      font-size: 18px;
+      z-index: 10;
+      padding: 0;
+    }
+
+    .scroll-btn.visible { display: grid; }
+
+    .toast-root {
+      position: fixed;
+      left: 50%;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      display: grid;
+      gap: 8px;
+      z-index: 999;
+    }
+
+    .toast {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+    }
+
+    .toast.error {
+      border-color: rgba(251, 113, 133, 0.3);
+    }
+
+    .hidden-terminal-host {
+      position: fixed;
+      top: 0;
+      left: -20000px;
+      width: 1400px;
+      height: 960px;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .hidden-terminal-frame {
+      display: block;
+      width: 1400px;
+      height: 960px;
+      border: 0;
+    }
+
+    @media (max-width: 768px) {
+      .app-shell {
+        padding-left: 12px;
+        padding-right: 12px;
+        gap: 12px;
+      }
+
+      .topbar,
+      .legacy-note,
+      .messages-panel,
+      .approval-panel,
+      .composer {
+        border-radius: 18px;
+      }
+
+      .topbar-actions,
+      .composer-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+
+      .toolbar-select,
+      .nav-btn,
+      .action-btn {
+        min-height: 44px;
+        flex: 1 1 160px;
+      }
+
+      .message-bubble {
+        max-width: 100%;
+      }
+
+      .composer textarea {
+        min-height: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar card">
+      <a class="nav-btn" href="/">← Dashboard</a>
+      <a class="nav-btn" href="/folder/{{FOLDER_PATH_URL}}">Terminal</a>
+      <div class="topbar-main">
+        <p class="title">Chat mode</p>
+        <div class="subtitle">{{FOLDER_PATH_HTML}}</div>
+        <div class="status-line" id="status-text">Loading sessions…</div>
+        <div class="session-line" id="session-label"></div>
+      </div>
+      <div class="topbar-actions">
+        <select id="tool-select" class="toolbar-select" aria-label="Tool selector"></select>
+        <select id="session-select" class="toolbar-select" aria-label="Session selector"></select>
+        <button id="new-session-btn" type="button" class="action-btn primary">New session</button>
+        <button id="clear-btn" type="button" class="action-btn">Clear history</button>
+      </div>
+    </header>
+
+    <details class="legacy-note card">
+      <summary>Used an older Chat beta?</summary>
+      <p class="help-text">This version no longer uses legacy chat-only sessions. If you still have old chat data, remove any <code>"surface": "chat"</code> entries from <code>~/.config/claude-web/sessions.json</code>, clear this site's stored data in your browser, then run <code>systemctl --user restart remotelab-auth-proxy.service</code>.</p>
+    </details>
+
+    <section class="messages-panel card">
+      <div class="messages-header">
+        <strong>Conversation</strong>
+        <span class="help-text">Chat now follows the same real terminal session you already use.</span>
+      </div>
+      <div id="message-list" class="messages-body"></div>
+      <div id="empty-state" class="empty-state">
+        <h2 id="empty-title" class="empty-title">Pick a session</h2>
+        <p id="empty-subtitle" class="empty-subtitle">Select an existing Codex or Claude terminal tab to continue the same context here.</p>
+      </div>
+    </section>
+
+    <section id="approval-panel" class="approval-panel card" hidden>
+      <div id="approval-title" class="approval-title"></div>
+      <div id="approval-body" class="approval-body"></div>
+      <div id="approval-actions" class="approval-actions"></div>
+    </section>
+
+    <section class="composer card">
+      <textarea id="composer-input" placeholder="Continue the selected Codex / Claude session here…"></textarea>
+      <div class="composer-actions">
+        <div class="help-text">Use <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd> to send quickly.</div>
+        <div class="composer-buttons">
+          <button id="stop-btn" type="button" class="action-btn danger">Stop</button>
+          <button id="esc-btn" type="button" class="action-btn" title="Send Escape to the current session">Esc</button>
+          <button id="send-btn" type="button" class="action-btn primary">Send</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <button id="scroll-bottom-btn" class="scroll-btn" type="button" aria-label="Scroll to latest">↓</button>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+  <div id="hidden-terminal-host" class="hidden-terminal-host"></div>
+
+  <script nonce="{{NONCE}}">
+    window.CHAT_BOOTSTRAP = {
+      folderPath: '{{FOLDER_PATH_JS}}',
+      folderPathUrl: '{{FOLDER_PATH_URL}}'
+    };
+  </script>
+  <script type="module" src="/assets/chat-view.mjs"></script>
+</body>
+</html>

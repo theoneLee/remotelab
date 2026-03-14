@@ -762,6 +762,7 @@
     <a href="/" class="back-btn">&larr; Back</a>
     <div class="folder-path">{{FOLDER_PATH_HTML}}</div>
     <div class="toolbar-actions">
+      <button id="chat-btn" class="toolbar-btn" title="Open current tool tab in chat mode" disabled>Chat</button>
       <button id="refresh-btn" class="toolbar-btn">Refresh</button>
       <button id="auto-refresh-btn" class="toolbar-btn">Auto</button>
       <button id="collapse-btn" class="toolbar-btn">Collapse</button>
@@ -884,6 +885,24 @@
       return session.tool || 'claude';
     }
 
+    function getActiveSessionData() {
+      if (!activeTabId) return null;
+      return tabs.find(function(tab) { return tab.id === activeTabId; }) || null;
+    }
+
+    function updateChatButton() {
+      var button = document.getElementById('chat-btn');
+      var session = getActiveSessionData();
+      var isEligible = session && session.type === 'tool';
+
+      button.disabled = !isEligible;
+      if (isEligible) {
+        button.title = 'Open ' + session.name + ' in chat mode';
+      } else {
+        button.title = 'Select a tool tab to open chat mode';
+      }
+    }
+
     function createTabElement(session) {
       var tab = document.createElement('div');
       tab.className = 'tab';
@@ -942,6 +961,7 @@
       }
 
       document.getElementById('empty-state').style.display = 'none';
+      updateChatButton();
     }
 
     function switchToTab(sessionId) {
@@ -978,6 +998,8 @@
       if (activeTab) {
         activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
       }
+
+      updateChatButton();
     }
 
     function removeTab(sessionId) {
@@ -1002,6 +1024,8 @@
           document.getElementById('empty-state').style.display = '';
         }
       }
+
+      updateChatButton();
     }
 
     async function closeTab(sessionId) {
@@ -1387,6 +1411,12 @@
       if (!e.target.closest('#new-tab-wrapper')) {
         document.getElementById('new-tab-dropdown').classList.remove('open');
       }
+    });
+
+    document.getElementById('chat-btn').addEventListener('click', function() {
+      var session = getActiveSessionData();
+      if (!session || session.type !== 'tool') return;
+      window.location.href = '/chat/' + encodeURIComponent(FOLDER_PATH) + '?sessionId=' + encodeURIComponent(session.id);
     });
 
     // ── Terminal Helpers ──
@@ -2006,6 +2036,7 @@
         if (sessions.length === 0) {
           document.getElementById('empty-state').style.display = '';
         }
+        updateChatButton();
       } catch (err) {
         console.error('Failed to initialize:', err);
       }
